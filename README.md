@@ -301,3 +301,103 @@ O (n log_m(p)) (what are n, m, p?)
 ### implementation: Raposo
 
 
+## Daniel Solano Gomez (@deepbluelambda), Clojure on android
+
+- Problem: JVM is not Dalvik VM
+  - JVM: stack-based, method JIT, Java SE, .class files
+  - Dalvik: register-based, trace JIT, not quite Java SE, DEX file
+
+- .jar file concats lots of .class files
+  - causes repetition of eg constants
+- DEX is smarter, collapses and collects constants
+  - results in smaller code size
+  
+- DEX is packaged in an .apk
+- when installed, converted to Optimized DEX (ODEX)
+- implication: loading bytecode is heavyweight
+- and dynamically loading bytecode not supported
+- need AOT compilation or interpretation
+- but want:
+
+### dynamic compilation on android
+
+- why?
+  - obvious really
+  - makes clojure REPL possible
+
+- review of clojure repl process:
+  - start with .clj file
+  - reader converts to data structures
+  - evaluator evaluates structures
+  - which then generates bytecode (magic here)
+  
+- Dalvik process:
+  - take a .class file and generate a DEX file
+  - package DEX in an .apk
+  - use existing android SDK to load .apk as ODEX
+- uses new var: `clojure.core/*vm-type*`
+  - either `:dalvic-vm` or `:java-vm`
+
+- All Dalvik-related code is loaded reflectively
+- some macros may blow the stack during compilation (!)
+- can't depend on APIs which don't exist in Android (such as
+  `java.beans`)
+
+### benchmarking clojure vs competition
+
+- package size:
+  - java tiny
+  - scala small
+  - clojure 1.3 bigger
+  - clojure 1.2 bigger still
+  - ruboto biggest (see slides for graph)
+- startup time
+  - tracks package size trend above. Takes aaaages to start Clojure
+- heap size
+  - again tracks same trend.
+
+### where does the space pain come from?
+
+Answer in one word: `clojure.core`.
+
+Biggest space hog (more than half): `clojure.core__init` -- contains
+docstrings, arglists, other metadata
+
+### where does the time pain come from?
+
+Clojure's runtime class `RT`. Big things:
+
+- `RT.load("clojure/core")`
+- `(in-ns 'user)`
+- `(refer "clojure/core")`
+- Object churn causing GC
+  - lots of metadata
+  
+### ways to potentially improve performance
+
+- remove `user` ns
+- remove metadata
+- transients during initialization
+- serializable `clojure.core`
+- source-level tree shaker
+
+### Build tools
+
+- neko
+
+### what about ClojureScript?
+
+- O web apps
+- O mobile development frameworks
+- X native development
+  - constrained by availability of JS engines
+- ~ Scripting Layer for Android
+  - not ideal "native experience"
+  
+### Summing up
+
+- Clojure has potential to be a first-class language for android
+- dynamic development is a killer feature
+- tooling and community support not there yet :(
+- Book coming soon: "Decaffeinated Android" (ie without Java)
+
