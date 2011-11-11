@@ -401,3 +401,23 @@ Clojure's runtime class `RT`. Big things:
 - tooling and community support not there yet :(
 - Book coming soon: "Decaffeinated Android" (ie without Java)
 
+### Questions
+
+- even without load time, GCs seem to be very frequent, kills UX
+  - early androids sucked
+  - 2.3 introduced concurrent GC, helps quite a bit
+- have you tried regular clojure with performance tweaks? (eg remove
+  `user` ns etc)
+  - no, not really
+  - mostly affects startup time, not such a big deal for regular
+    clojure
+- clojure on Google App Engine startup time is a Big Deal, so maybe it
+  would actually be a win?
+  - probably
+- right now on android, when it builds app, a lot of work goes on
+  beside generating DEX file; there's also resource generation
+  etc. What's your build environment and how do you handle this extra
+  stuff?
+  - modify compile target to do clojure compilation as well as java
+    compilation
+    
