@@ -1,28 +1,36 @@
-# talks to recommend from conj 2011
+# Philip Potter's clojure conj 2011 notes
 
-- stuart sierra's initial talk
+# day 1
+
+## stuart sierra's initial talk
   - who: people at a loose end, people wanting to see potential
   - why: 
-- @IORayne's talk on clojail
-  - what: sandbox for evaluating clojure code without allowing
-      dangerous side-effects
-  - why
-    - entertaining delivery
-    - interesting problem
-- @chrishouser's cljs talk
-  - why
-    - wasn't listening hard enough...
-    - deep dive into cljs, shows power and capability of platform
-- phil bagwell's talk
-  - why
-    - how do you get clojure into production? great ideas
-    - 
-    
-- ambrosebs clojure.logic
-- stuart halloway
-  - entertaining as usual
 
-## day 2
+## @IORayne's talk on clojail
+
+- what: sandbox for evaluating clojure code without allowing
+      dangerous side-effects
+- why
+  - entertaining delivery
+  - interesting problem
+
+## @chrishouser's cljs talk
+
+- deep dive into cljs, shows power and capability of platform
+
+## phil bagwell -- striving to make things simple and fast
+
+- how do you get clojure into production? great ideas
+- persistent data structures with good properties for append and index
+    
+## ambrosebs clojure.logic
+
+## stuart halloway
+
+- entertaining as usual
+- promised to define "power" objectively, don't feel it quite delivered 
+
+# day 2
 
 ## Neal Ford, TW
 
