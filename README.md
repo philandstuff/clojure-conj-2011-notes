@@ -675,4 +675,85 @@ Clojure's runtime class `RT`. Big things:
 
 ## Daniel Spiewak, "Functional Data Structures in Scala"
 
+- source on [github](https://github.com/djspiewak/extreme-cleverness)
+
+- categorization:
+  - sequential
+    - preserves insertion order
+    - random access not so good
+  - associative
+    - doesn't preserve insertion order
+    - random access
+
+- Immutable
+- comparable asymptotic performance to equivalent mutable structures
+  - copy-on-write is not good enough
+- *structural sharing* is the main tool to achieve performance
+
+- singly linked list:
+  - most things are linear time: `append`, `concat` etc
+  - small description: cons cell or empty list
+
+  - Scala `List[+A]` is a slist implemented as a sealed trait
+  - structural sharing by two cons cells pointing to same tail
+
+- want a function queue
+  - linked list is obvious
+  - but `first` and `last` are opposing
+  - one will be constant, the other linear
+  - can we get both?
+
+- banker's queue
+  - naive persistent queue
+  - two lazy singly-linked list
+  - front list (for dequeue)
+  - rear list (for enqueue)
+  - periodically reverse rear into the front
+  - lazy amortization
+  
+- clojure's `PersistentQueue` is banker's queue, but with a vector for
+  one of the lists to avoid the reverse
+  
+- amortization redux
+  - interesting point: laziness actually distributes the work
+
+- 2-3 finger tree: nice queue
+  - constant append, prepend, first, last
+  - logarithmic: insert
+  - linear: concat
+  
+- scala example
+  - cool
+  - but really slow (film at 11)
+  
+- associative examples
+
+- red-black tree (== clojure's `sorted-map`)
+  - log: get/insert/update
+  - linear: intersect/union
+
+- invariants:
+  - every path from root to leaf contains same number of black nodes
+  - no red node has red parent
+  - so total depth ranges from d/2 to d
+
+- combination sequential/associative
+
+- Bitmapped Vector Trie (hickey/bagwell)
+  - constant: append first/last/nth/update
+    - actually O(log_{32}n)
+  - linear: concat/insert/prepend
+
+  - array with max length 32
+    - copy on write (fast for small n)
+  - array of arrays, max length 32
+    - array of array of arrays, max length 32
+  - max depth is 7 (because max int on JVM is 2^32-1)
+
+- locality of reference
+  - this is what killed the 2-3 finger tree
+  - and what makes the bitmapped vector trie awesome
+    - 32 byte arrays fit cache lines
+  
+  
 
