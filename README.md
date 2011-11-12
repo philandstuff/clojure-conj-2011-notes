@@ -755,5 +755,143 @@ Clojure's runtime class `RT`. Big things:
   - and what makes the bitmapped vector trie awesome
     - 32 byte arrays fit cache lines
   
-  
+### questions
 
+- how is the red-black tree immutable?
+  - what looked like a modification in the slides, is actually
+    creating a new node which refers to existing subtrees
+
+- how does this play out on a non-JVM platform?
+  - Haskell has some smarts around this...
+    - although would be astonished if anywhere near JVM, because JVM
+      is Very Fast
+      
+## Fogus, Macronomicon
+
+- language-level program manipulation
+
+### C (eeeek!)
+
+- random strings of chars!
+
+    #define foo "salad
+    
+    int main (void) {
+        printf(foo bar");
+        return 0;
+    }
+
+- expressions
+
+    #define discr(a,b,c) b*b-4*a*c
+    
+- need to avoid precedence lossage:
+
+    #define discr(a,b,c) ((b)*(b)-4*(a)*(c))
+    
+### C++ template metaprogramming
+
+- factorial example using a `template<int m>`
+- they have values, functions, branching and recursion
+- templates are Turing complete!
+
+### OCaml
+
+source:
+
+    List.map (fun x -> x+1) [1; 2; 3]
+    
+quoting mechanism:
+
+    <:expr< List.map (fun x -> x+1) [1; 2; 3] >>
+  
+### Lisp macros
+
+- don't use them!
+- legitimate use cases
+  - create binding forms
+  - control flow
+  - ... (abstraction)
+  - ... (optimization)
+  - ... 
+  - ... (true power awesomeness)
+  - icing
+  
+- but with lightweight fns/blocks, can easily get
+  - control flow
+  - bindings
+  
+- stupid basic-in-scala example
+  - shows how much is possible without macros
+  - BUT:
+  - demonstrates mapping dilemma
+    - scala keeps poking through into his "basic" DSL
+    
+- "all legitimate uses of macros are legitimate"
+
+#### example: do i need a macro?
+
+- what do i want?
+  - requirements: a way to define local bindings
+  
+- do i need a macro?
+  - if i don't, don't use it
+  
+- what should my macro look like?
+  - top down design of interface
+  
+#### hygiene in macros
+
+- need to use generated symbols such as `x#`
+- otherwise can be masked by other defs
+- inside symbols can leak out
+
+    (defmacro foo [a & body]
+      `(let [x a]
+         ~@body))
+      
+- x is visible in body
+
+- so don't let bindings leak in or out of macros
+
+#### Mood-specific languages (MSLs)
+
+- a language which makes sense within a given context
+- example from trammel
+- goals
+  - new :pre/:post syntax
+  - decomplected contracts
+  - better error reporting
+- did i need a macro?
+  - yes!
+  - second-class form
+    - :pre and :post map
+- created a new :pre/:post syntax
+
+    (defconstrainedfn sqr
+    [n].[number? (not= foo)
+      body)
+      
+- read `[n]` where `[number?...]`
+
+- decomplected contracts
+
+#### minderbinder example
+
+- units and unit conversions
+- want to avoid being boilerplated alive
+
+- want to just use the specification directly, something like:
+
+    ;; first attempt at syntax:
+    (unit of length
+      [base unit: meter]
+      [1 inch = 0.0254 meter]
+      [1 foot = 12 inch])
+      
+- use of macros allows one to specify compile-time constants in a rich
+  way (MSL)
+
+    (size-of 3 ::feet) ; compile-time converted to 0.9144 or similar
+    
+- [source](http://macronomicon.org/)
