@@ -421,3 +421,258 @@ Clojure's runtime class `RT`. Big things:
   - modify compile target to do clojure compilation as well as java
     compilation
     
+## Rich Hickey, keynote: Areas of Interest for Clojure's Core
+
+- this is *not* a roadmap
+  - half-baked
+  - no time scheduled to attack these tasks
+  - nead more design time
+  
+### Leaner
+
+- core part of clojure includes built-in runtime for dynamic
+  compilation, but this bulks things up  
+- want to deliver clojure libraries to non-clojure
+- smaller targets, eg android
+- move ASM out (currently it's bundled in)
+- dev-less builds
+  - no metadata, shaking etc
+  - debug builds
+  
+### unification of clojure and clojurescript
+
+- ClojureScript is Clojure on a different host
+- shared source libraries
+- conditional compilation
+  - also needed by Clojure CLR
+- unifying on cljs analysis rep for tooling
+- BUT: no objective to be able to have drop-in replacement ability of
+  clj from different platforms  
+
+### Prepping for Clojure in Clojure
+
+- Move protocols down to 'bottom'
+  - not currently a compiler, primitive feature, like `deftype` is
+  - value of this seen in ClojureScript
+- organizing cljs compiler for multiple targets?
+  - cljs seems to be overall a better design
+  
+### invokedynamic (Java 7)
+
+- what is is:
+  - code-gen and class-free call sites
+    - class is pretty big and carries lots of baggage, if each fn
+      requires a class that gets expensive
+  - access to safe point 'magic'
+    - safe point is a magic implementation detail used during eg
+      bytecode loading (i think)
+- for clojure:
+  - protocol/keyword call sites
+  - fast & dynamic vars
+    - vars are dynamic and volatile
+    - hard for HotSpot to inline through vars
+  - reflection-free interop
+
+### Leveraging Logic
+
+- code -> analysis -> core.logic
+  - don't settle for 'type checking'
+  - queryable programs
+- predicate dispatch (see David Nolen's talk above)
+  - don't settle for 'pattern matching'
+    - pattern matching is closed and order-dependent
+    - can't add new patterns, depend on order of patterns
+  - arbitrary dispatch allows for better domain driven design
+    - by allowing a closer match of code to product owner's thinking
+    - more declarative
+  - is core.logic fast enough for this?
+    - precompile dispatch trees
+    
+### Parallelism
+
+- concurrency is here already
+- parallelism is different:
+  - concurrency is different tasks running concurrently
+  - parallelism is one task split into subparts running concurrently
+- is fork/join the right model?
+  - particularly in presence of I/O?
+  - or in balanced (embarassingly parallel) compute problems?
+- parallel algorithms, not colls
+  - but colls need a good shape (something other than seqs)
+  - "We don't attach our functions to our data, we apply our functions
+    to our data"
+
+### Transients and beyond
+
+- transients do too much
+  - persistent symbiosis & editing
+  - *and* policy (ie, only do stuff from one thread)
+- and too little
+  - users must use linearly
+
+- transient-based model (see slide)
+  - don't want transient to be externally visible, need constrained
+    visibility
+
+- procs
+  - fns that operate on transients (mutability, but testability)
+  - like pure function, can't affect world or be affected by it
+  - because transients don't leak
+  - can be wrapped in value->transient and transient->value to produce
+    a pure function
+    
+- Pods
+  - split no-leak policty from data structure
+  - policy is now:
+    - value in, value out
+  - process goes through pod
+  - options for access
+    - single thread vs mutex
+  - work with transients
+    - just take policy out
+    - persistent in, transient inside, persistent out
+  - but also works with other mutability:
+    - String in, StringBuilder inside, String out
+
+- pod usage example (see slide)
+  - demonstrates using a StringBuilder as a transient in a pod
+  - by allowing String to extend Editable protocol and StringBuilder
+    to extend Transient
+
+- open questions on pods
+  - i'm not that interested in these
+
+- Accumulators
+  - pods -- do they do too much?
+  - chief use case is building/birthing
+  - maybe only need `conj!`/`append`
+
+### Extensible reader
+
+- why?
+  - clojure data as serialization (better than JSON)
+    - why is it better?
+      - more data types (keywords, sets)
+      - metadata
+    - is it as good as it could be?
+    - XML has eXtensibility
+      - JSON and clojure don't
+    - finite number of types means less self-describing
+      - is that integer actually a date?
+      - is that string actually a URL?
+      - same problem as with arbitrary binary data
+      - xml allows this
+- but
+  - avoid wheel rebuilding in extensions
+  - #= reader macro is cheating; needs the clojure evaluator to read
+     the data now, is not a generalized data format any more
+  
+- Premise
+  - meet at semantics and print/read
+  - plug in desired programmatic type
+
+- How
+  - no custom reader macros!
+  - Tags on other readables
+  - eg `#instant "1984-02-11T12:12:12.12Z"`
+  - self-describing
+  
+- question: how is this different from ordinary metadata?
+
+### Questions
+
+- Have you looked at YAML's tag format?
+  - not claiming originality! ripped it off from erlang!
+  
+- `*print-dup*` spits out classes and `#=` and suchlike, how is this different?
+  - it's about semantic meaning of data, not about specific
+    implementation
+  - `*print-dup*` will distinguish `HashMap` from `ArrayMap` whether
+    you like it or not
+    
+- from example, where does agreement happen about what `#instant
+  "foo"` will rehydrate to?
+  - no agreement
+  - can't dictate data structure
+  
+- have you looked at openmath?
+
+- querying programs - what does it mean? what would be an example?
+  - simple example - "how deeply nested are calls to this function?"
+  - program analysis
+  
+- conditional computation for targetting different platforms - what
+  about specifying an interface that implementations must implement?
+  - don't like that at all; reifying environments
+
+- pods solve generating a value, but what about a way of iterating
+  over a coll using mutability as a performance optimization?
+  - haskell does this with stream fusion; good example of type system
+    helping
+    
+- platform power, access to safe points, devless builds; what is
+  largest couple of things in way of platform power?
+  - we have great platform power
+  - need to finesse utilization for efficiency, but have access to all
+    features pretty much
+    
+- you were talking last year about issue of resource management in
+  presence of laziness, have you got closer to solving issue?
+  - lazy evaluation might eg hold onto resources until evaluation
+    reifies and allows resources to release
+  - problem is harder than i thought
+  - possibly no silver bullet
+  
+## Day 3
+
+### Nathan Marz, Cascalog
+
+- High level abstraction for Hadoop map-reduce
+
+- Hadoop redux
+  - high latency batch processing
+  - fault tolerant
+  - petabyte scale
+  
+- number of tools to provide abstraction over hadoop
+
+- cascalog's USP: abstraction + composition
+
+- operates over datasets of tuples
+
+- example:
+  - `(?<- (stdout) [?person] (age ?person ?age) (< ?age 30))`
+  - `?<-` - define query
+  - `(stdout)` - where to emit results
+  - `[?person]` - output variables
+  - remainder - predicates: constrain the output variables
+  - feels a bit like logic programming or sql
+  
+- predicates:
+  - `(* 2 ?x :> ?z)` -- inputs `:>` outputs
+  - define a constraint between a set of inputs and a set of outputs
+  - `(+ 2 ?x :> 6)` - when `x` is added to 2, you get 6
+  
+- families of predicates:
+  - functions
+  - filters - `(< ?age 30)` above is example
+  - aggregators
+  - generators: sources of tuples - `(age ?person ?age)` above is
+    example
+    
+- can join over different datasets
+  - just combine two generator predicates
+  - joins are therefore implicit, look like combining any other two
+    predicates
+    
+- [code demo](https://github.com/nathanmarz/cascalog-conj)
+  -
+    [basic examples first](https://github.com/nathanmarz/cascalog-conj/blob/master/src/clj/cascalog/conj/play.clj)
+  -
+    [then more involved with a tunisia-based dataset](https://github.com/nathanmarz/cascalog-conj/blob/master/src/clj/cascalog/conj/tunisia.clj)
+    - particularly like the use of `bar?-` to execute a query then use
+      incanter to create a bar graph of the results
+
+## Daniel Spiewak, "Functional Data Structures in Scala"
+
+
