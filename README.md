@@ -895,3 +895,211 @@ quoting mechanism:
     (size-of 3 ::feet) ; compile-time converted to 0.9144 or similar
     
 - [source](http://macronomicon.org/)
+
+##  Monotony lightning talk
+
+- scheduling (cron style but better)
+- [on github](https://github.com/aredington/monotony)
+- would like to see if this is applicable to overtone
+
+## Immutant lightning talk
+
+- [application server for Clojure](http://immutant.org/news/2011/11/01/announcing/)
+- Jim Crossley and Toby Crawley, RedHat guys
+- JBoss app server == middleware
+  - middleware == accidental complexity!
+  - includes web, messaging, caching, clustering, scheduling,
+    transactions
+  - things we expect to see in the e-word
+  - traditionally required big bloated bag of annotated java and xml
+  
+- TorqueBox
+  - encapsulates JBoss with JRuby
+  - fastest ruby deployment platform (but under which metrics?)
+  - ruby + yaml, not java + xml
+- Immutant
+  - DSL to describe the middleware you need
+  - web and core messaging stuff
+  - isolated deployments (ie separation of multiple deployed apps)
+  - lein plugin for deployment
+- integrated polyglot
+  - ruby in front, clojure in back
+
+## Lisp on the arduino lightning talk
+
+- arduino is a microcontroller
+  - cheap
+  - relatively simple I/O through bit twiddling
+  - tiny
+- programming the arduino is hard
+  - wanted lisp: itch to scratch
+- writing your own lisp is *awesome*
+- no GC (!)
+  - a teeny tiny constraint on the system
+  
+- demo of I/O
+
+- uberlisp
+  - next big thing is GC!
+  
+## Chris Granger lightning talk on Korma
+
+- ORMs seem nice
+  - in the long run problematic
+
+- need a different abstraction
+  - enter korma
+
+- uses c3p0 for connection pooling
+- entirely composable
+- sql generation engine
+- allows you to specify relationships between entities
+
+    (defentity person
+       (has-one address))
+       
+
+## Craig Andera on clojure performance
+
+### What's wrong with this picture?
+
+- we ship in weeks -- time to make it faster!
+- you go to your users to get perf requires
+- they make up a number
+- you tweak til you hit the number
+
+- Done late, haphazardly, no adequate model
+
+- performance is not a scalar quantity
+  - "how fast is the system?" doesn't have a simple answer
+  - system doesn't do just one thing
+  
+  
+### developing a model for performance
+
+- What is the 99% case for response time when i have 10 users?
+- what will the system do if I get slashdotted?
+- how many servers will i need a year from now?
+
+- inaccuracies in the model
+  - testing vs production
+  - load balanced vs not
+  - small vs big data
+    - and other scaling issues
+
+  - all models are wrong; important to understand limitations
+  - but the model can still be useful even if wrong
+  
+### One useful model
+
+- *distribution* of latencies vs throughput
+  - for a given transaction mix
+
+
+- traditional requests vs throughput graph misses out on latency
+
+- questions we might answer
+  - can we meet customer expectations?
+  - how much capacity do we need to handle spikes?
+  - what is it going to cost to run this system?
+
+### Optimization loop
+
+- benchmark
+  - (re-)ask "what's the distribution of latencies etc?)
+- analyse
+- recommend
+  - decision - what do we do?
+- optimize
+- GOTO 10
+
+### benchmarking
+
+- from the beginning!
+- measure parameters of model
+- remember transaction mix is critical
+  - 10% writes, 90% reads?
+- understand what you are measuring
+- number of threads in your load generator != load
+- look for errors too
+- stop when done
+  - do as much as necessary, and no more
+  
+- tools
+  - load generators: jmeter, ab, httperf
+  - analysis of load data: excel, clojure
+  
+### Analysis
+
+- identify lowest-hanging fruit empirically
+  - don't guess
+  - yourkit? profiler
+- lots of thinking hard too
+- be aware of transaction mix
+
+### Recommend
+
+- easy at first
+- gets harder
+- use data from load tests
+- best recommendation is "we're done, let's stop"
+  - because it's no longer economically viable
+    - either because you've achieved your target
+    - or because you've reached diminishing returns
+
+### Optimize
+
+- fix one thing at a time
+- redesign may be necessary :(
+- this is why you want to start early
+
+### Benchmark again
+
+- back to beginning
+- relative changes can't tell you if your done
+  - but they can tell you if you're moving in right direction
+  
+### case study
+
+- before: 75 req/s, 25ms avg latency (admittedly a terrible latency
+  measure; no knowledge of distribution)
+
+- prepped customer
+- two-card iterative approach
+  - #1: benchmark/analyse
+  - #2: optimize
+  
+- increase to 1700 req/s peak throughput
+- but the latency suffered at 1700
+  - <10ms latency @ 1500 rq/s @ 99% confidence
+- happy customer!
+
+- stuff that happened
+  - logging was a bottleneck :S (~80% time!)
+  - a one-char change in a config file made a huge difference
+  - uncovered an issue with huge volume of log data
+  - had to redesign logging infrastructure again
+  - never tested load-balanced
+  - stress test for free as part of CI
+  
+## Sam Aaron: Notes of the Synthesis of Music
+
+- after "Notes on the Synthesis of Form" by Christopher Alexander
+  - an architect
+  
+- Overtone! \o/
+
+- Kasparov:
+  - weak human + computer + better process better than
+  - strong human + computer + inferior process
+
+- Music as performance!
+  - be like Jimi Hendrix!
+  
+- things to make performance clear
+  - make it obvious what the player is doing!
+    - simple interface
+  - notation
+    - symbol space rather than sound space
+
+
