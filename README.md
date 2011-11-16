@@ -623,9 +623,9 @@ Clojure's runtime class `RT`. Big things:
   - problem is harder than i thought
   - possibly no silver bullet
   
-## Day 3
+# Day 3
 
-### Nathan Marz, Cascalog
+## Nathan Marz, Cascalog
 
 - High level abstraction for Hadoop map-reduce
 
